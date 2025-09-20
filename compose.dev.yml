@@ -1,0 +1,55 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+      target: dev
+    command: [
+      "bash","-lc",
+      "ulimit -c unlimited; \
+         exec /usr/local/cargo/bin/cargo watch -w src \
+           -x 'clippy' \
+           -x 'run'"
+    ]
+    env_file:
+      - .env.dev
+    expose:
+      - "8080"
+    networks:
+      - backend
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app/backend
+      - ./backend/target:/app/backend/target
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+      target: dev
+    command: [
+      "sh", "-lc",
+      "npm ci && npm run dev"
+    ]
+    env_file:
+      - .env.dev
+    ports:
+      - "30002:3000"
+    depends_on:
+      - backend
+    networks:
+      - backend
+      - public
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app/frontend
+      - node_modules:/app/frontend/node_modules
+
+volumes:
+  node_modules:
+
+networks:
+  backend:
+    driver: bridge
+  public:
+    driver: bridge

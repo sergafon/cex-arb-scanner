@@ -1,0 +1,41 @@
+# ── Rust ──
+**/target/
+
+# ── VCS / IDE ──
+**/.idea/
+**/.vscode/
+
+# ── OS ──
+**/.DS_Store
+**/Thumbs.db
+
+# ── Binarres ──
+**/*.exe
+**/*.dll
+**/*.so
+**/*.dylib
+**/*.rlib
+**/*.a
+**/*.o
+
+# ── Temp ──
+**/*.log
+**/*.tmp
+**/*.swp
+**/*.swo
+
+# ── Docker / CI ──
+**/protobuf-src-fake
+
+# ── Frontend ──
+**/node_modules/
+**/.next/
+**/build/
+**/dist/
+**/dist-ssr/
+**/next-env.d.ts
+
+# ── Project ──
+**/logs/
+**/.env.*
+!**/.env.*.*

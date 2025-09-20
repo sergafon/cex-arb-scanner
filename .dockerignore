@@ -1,0 +1,46 @@
+# ── Rust ──
+**/target/
+
+# ── VCS / IDE ──
+**/.git/
+**/.gitignore
+**/.gitattributes
+**/.github/
+**/.idea/
+**/.vscode/
+
+# ── OS ──
+**/.DS_Store
+**/Thumbs.db
+
+# ── Binarres ──
+**/*.exe
+**/*.dll
+**/*.so
+**/*.dylib
+**/*.rlib
+**/*.a
+**/*.o
+
+# ── Temp ──
+**/*.log
+**/*.tmp
+**/*.swp
+**/*.swo
+
+# ── Docker / CI ──
+**/docker-compose*.yml
+**/docker-compose*.yaml
+**/compose*.yml
+**/compose*.yaml
+**/Dockerfile*
+**/protobuf-src-fake
+
+# ── Frontend ──
+**/node_modules/
+**/.next/
+**/dist/
+**/dist-ssr/
+
+# ── Project ──
+**/logs/
