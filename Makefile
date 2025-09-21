@@ -1,3 +1,11 @@
+FLAGS      := $(filter -%,$(MAKECMDGOALS))
+FLAGS      := $(filter-out --,$(FLAGS))   # -- не уходит в docker
+DASHGOALS  := $(FLAGS) $(filter --,$(MAKECMDGOALS))
+
+.PHONY: $(DASHGOALS)
+$(DASHGOALS):
+	@:
+
 PROFILE ?= dev
 
 ifneq (,$(filter prod,$(MAKECMDGOALS)))
@@ -18,13 +26,13 @@ else
   $(error Unknown PROFILE=$(PROFILE))
 endif
 
-.PHONY: up build down %
+.PHONY: up build down
 up:
-	$(COMPOSE) up $(filter-out $@,$(MAKECMDGOALS))
+	$(COMPOSE) up $(FLAGS)
 build:
-	$(COMPOSE) build $(filter-out $@,$(MAKECMDGOALS))
+	$(COMPOSE) build $(FLAGS)
 down:
-	$(COMPOSE) down $(filter-out $@,$(MAKECMDGOALS))
+	$(COMPOSE) down $(FLAGS)
 
 .PHONY: dev prod
 dev: ;

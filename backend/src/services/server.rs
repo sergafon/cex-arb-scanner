@@ -25,8 +25,6 @@ impl ServerService {
         let addr = SocketAddr::from(([0, 0, 0, 0], 8080));
         let listener = TcpListener::bind(addr).await?;
 
-        tracing::info!("Server start http://{addr}");
-
         axum::serve(listener, router.into_make_service()).await?;
 
         Ok(())
