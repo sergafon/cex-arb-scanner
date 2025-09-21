@@ -1,3 +1,4 @@
+name: dev
 services:
   backend:
     build:
@@ -5,7 +6,7 @@ services:
       dockerfile: ./backend/Dockerfile
       target: dev
     command: [
-      "bash","-lc",
+      "sh","-lc",
       "ulimit -c unlimited; \
          exec /usr/local/cargo/bin/cargo watch -w src \
            -x 'clippy' \

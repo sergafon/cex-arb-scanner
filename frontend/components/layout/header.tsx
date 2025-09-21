@@ -8,7 +8,7 @@ export function Header() {
           <h1 className="text-xl font-semibold">Arbitrage Scanner</h1>
         </div>
         <Link
-          href="https://github.com/your-username/arbitrage-scanner"
+          href="https://github.com/Investerium/cex-arb-scanner"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-9 h-9 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"

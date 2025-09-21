@@ -8,31 +8,41 @@ interface TradingCardProps {
   data: TradingData
 }
 
-function formatToMaxDecimals(...nums: number[]): string[] {
+function formatToMaxDecimals(...nums: string[]): string[] {
   const maxDecimals = Math.max(
-    ...nums.map((n) => {
-      const s = n.toString()
-      return s.includes(".") ? s.split(".")[1].length : 0
+    ...nums.map((s) => {
+      return s.includes(".") ? s.split(".")[1].replace(/0+$/, "").length : 0
     }),
   )
 
-  return nums.map((n) =>
-    n.toLocaleString(undefined, {
+  return nums.map((s) => {
+    const n = Number(s)
+
+    return n.toLocaleString(undefined, {
       minimumFractionDigits: maxDecimals,
       maximumFractionDigits: maxDecimals,
-    }),
-  )
+    })
+  })
+}
+
+function formatDecimals(num: number): string {
+  const isInteger = Number.isInteger(num)
+
+  return num.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: isInteger ? 0 : 4,
+  })
 }
 
 export function TradingCard({ data }: TradingCardProps) {
   const grossPercent = Number.parseFloat(data.gross_percent)
   const netPercent = Number.parseFloat(data.net_percent)
-  const volume = Number.parseFloat(data.volume)
+  const volume = formatDecimals(Number(data.volume))
   const isProfit = netPercent > 0
   const symbol = data.symbol.toUpperCase()
   const [buy_price, sell_price] = formatToMaxDecimals(
-    Number(data.buy_price),
-    Number(data.sell_price),
+    data.buy_price,
+    data.sell_price,
   )
 
   return (
@@ -53,7 +63,7 @@ export function TradingCard({ data }: TradingCardProps) {
             variant={isProfit ? "positive" : "destructive"}
             className="text-sm font-bold px-3 py-1"
           >
-            {isProfit ? "+" : "-"}
+            {isProfit ? "+" : ""}
             {netPercent.toFixed(3)}%
           </Badge>
         </div>
@@ -119,7 +129,7 @@ export function TradingCard({ data }: TradingCardProps) {
               Volume
             </span>
             <span className="font-mono font-bold text-foreground">
-              {volume.toFixed(4)}
+              {volume}
             </span>
           </div>
 

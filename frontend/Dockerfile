@@ -8,7 +8,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 FROM base AS dev
 
-COPY package.json package-lock.json ./
+COPY ./frontend/package*.json ./
 
 RUN --mount=type=cache,target=/root/.npm npm ci
 

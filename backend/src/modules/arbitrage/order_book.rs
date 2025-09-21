@@ -1,7 +1,6 @@
 use crate::kernel::dto::order_book::OrderBookDto;
 use crate::kernel::dto::signal::SignalDto;
 use crate::kernel::enums::exchange::Symbol;
-use crate::kernel::utils::time::get_now_timestamp;
 use crate::modules::arbitrage::utils::{percent, taker_fee};
 use crate::modules::bus::order_book::OrderBookBus;
 use crate::modules::bus::signal::SignalBus;
@@ -92,9 +91,11 @@ impl OrderBookArbitrage {
 
         let (sell, sell_eff) = best_sell?;
 
-        // if sell_eff <= buy_eff {
-        //     continue;
-        // }
+        let gross = (sell.bid_price - buy.ask_price) / buy.ask_price;
+
+        if gross <= Decimal::ZERO {
+            return None;
+        }
 
         let volume = buy.ask_amount.min(sell.bid_amount);
 
@@ -103,12 +104,6 @@ impl OrderBookArbitrage {
         // if notional < min_notional {
         //     continue;
         // }
-
-        let gross = (sell.bid_price - buy.ask_price) / buy.ask_price;
-
-        if gross <= Decimal::ZERO {
-            return None;
-        }
 
         let net = (sell_eff - buy_eff) / buy_eff;
 
@@ -130,13 +125,10 @@ impl OrderBookArbitrage {
     fn prepare_books(receiver: &mut [Receiver<Arc<OrderBookDto>>]) -> Vec<Arc<OrderBookDto>> {
         let mut books = Vec::with_capacity(receiver.len());
 
-        let timestamp = get_now_timestamp();
-        let staleness = Duration::from_secs(3);
-
         for rx in receiver.iter_mut() {
             let book = rx.borrow();
 
-            if timestamp.saturating_sub(book.timestamp) > staleness.as_millis() as u64 {
+            if book.timestamp == 0_u64 {
                 continue;
             }
 
