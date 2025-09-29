@@ -1,7 +1,5 @@
 pub mod manager;
 
-pub mod base_order_book;
-
 pub mod order_book;
 
 pub mod bybit;
@@ -17,3 +15,4 @@ pub mod htx;
 pub mod okx;
 
 pub mod mexc;
+mod supported_pair;

@@ -1,15 +1,15 @@
 use crate::kernel::dto::server::ServerState;
-use crate::modules::bus::signal::SignalBus;
+use crate::modules::broker::signal::SignalBroker;
 use axum::extract::State;
 use axum::response::sse::{Event, KeepAlive, Sse};
-use futures_util::stream::{unfold, Stream};
+use futures_util::stream::{Stream, unfold};
 use rust_decimal::Decimal;
 use std::cmp::Ordering;
 use std::convert::Infallible;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::time::{interval, MissedTickBehavior};
+use tokio::time::{MissedTickBehavior, interval};
 
 const KEEPALIVE_INTERVAL: u64 = 15;
 
@@ -18,16 +18,16 @@ type DynStream = Pin<Box<dyn Stream<Item = StreamItem> + Send + 'static>>;
 
 pub struct SseSignalHandler {
     tick_secs: u64,
-    signal_bus: Arc<SignalBus>,
+    signal_broker: Arc<SignalBroker>,
 }
 
 impl SseSignalHandler {
-    pub fn new(tick_secs: u64, signal_bus: Arc<SignalBus>) -> Self {
-        Self { tick_secs, signal_bus }
+    pub fn new(tick_secs: u64, signal_broker: Arc<SignalBroker>) -> Self {
+        Self { tick_secs, signal_broker }
     }
 
     pub async fn signals(&self) -> Sse<DynStream> {
-        let receivers = self.signal_bus.get_receivers();
+        let receivers = self.signal_broker.get_receivers();
         let mut tick = interval(Duration::from_secs(self.tick_secs));
         tick.set_missed_tick_behavior(MissedTickBehavior::Skip);
 

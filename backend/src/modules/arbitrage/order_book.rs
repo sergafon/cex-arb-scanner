@@ -2,33 +2,33 @@ use crate::kernel::dto::order_book::OrderBookDto;
 use crate::kernel::dto::signal::SignalDto;
 use crate::kernel::enums::exchange::Symbol;
 use crate::modules::arbitrage::utils::{percent, taker_fee};
-use crate::modules::bus::order_book::OrderBookBus;
-use crate::modules::bus::signal::SignalBus;
+use crate::modules::broker::order_book::OrderBookBroker;
+use crate::modules::broker::signal::SignalBroker;
 use anyhow::Result;
 use rust_decimal::Decimal;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::watch::Receiver;
-use tokio::time::{interval, MissedTickBehavior};
+use tokio::time::{MissedTickBehavior, interval};
 
 pub struct OrderBookArbitrage {
     tick_secs: u64,
-    order_book_bus: Arc<OrderBookBus>,
-    signal_bus: Arc<SignalBus>,
+    order_book_broker: Arc<OrderBookBroker>,
+    signal_broker: Arc<SignalBroker>,
 }
 
 impl OrderBookArbitrage {
     pub fn new(
         tick_secs: u64,
-        order_book_bus: Arc<OrderBookBus>,
-        signal_bus: Arc<SignalBus>,
+        order_book_broker: Arc<OrderBookBroker>,
+        signal_broker: Arc<SignalBroker>,
     ) -> Self {
-        Self { tick_secs, order_book_bus, signal_bus }
+        Self { tick_secs, order_book_broker, signal_broker }
     }
 
     pub async fn run_symbol_task(&self, symbol: Symbol) -> Result<()> {
-        let mut receivers = self.order_book_bus.subscribe(symbol).await?;
-        let sender = Arc::clone(&self.signal_bus);
+        let mut receivers = self.order_book_broker.subscribe(symbol).await?;
+        let sender = Arc::clone(&self.signal_broker);
         let tick_secs = self.tick_secs;
 
         tokio::spawn(async move {

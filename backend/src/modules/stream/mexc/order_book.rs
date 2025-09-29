@@ -1,34 +1,35 @@
-use crate::kernel::enums::exchange::Symbol;
-use crate::modules::bus::order_book::OrderBookBus;
-use crate::modules::decoder::mexc::order_book::MexcBookTickerDecoder;
-use crate::modules::stream::base_order_book::BaseOrderBookStream;
-use crate::modules::stream::order_book::OrderBookStream;
-use serde_json::json;
-use std::sync::Arc;
+use crate::kernel::enums::exchange::{Exchange, Symbol};
+use crate::modules::stream::order_book::{COUNT_PER_SUBSCRIBE, OrderBookStream};
+use async_trait::async_trait;
+use serde_json::{Value, json};
 use strum::IntoEnumIterator;
 
 pub struct MexcOrderBookStream;
 
+#[async_trait]
 impl OrderBookStream for MexcOrderBookStream {
-    type Decoder = MexcBookTickerDecoder;
+    const EXCHANGE: Exchange = Exchange::Mexc;
 
-    fn new(order_book_bus: Arc<OrderBookBus>) -> BaseOrderBookStream<Self::Decoder> {
-        let url = "wss://wbs-api.mexc.com/ws".to_string();
+    fn get_ws_url() -> String {
+        "wss://wbs-api.mexc.com/ws".to_string()
+    }
 
+    async fn get_batches() -> Vec<Value> {
         let mut batches = Vec::new();
-        let mut current = Vec::with_capacity(30);
+        let mut current = Vec::with_capacity(COUNT_PER_SUBSCRIBE);
 
         for sym in Symbol::iter() {
             current.push(format!(
                 "spot@public.aggre.bookTicker.v3.api.pb@100ms@{sym}USDT",
             ));
 
-            if current.len() == 30 {
+            if current.len() == COUNT_PER_SUBSCRIBE {
                 batches.push(json!({
                     "method": "SUBSCRIPTION",
                     "params": current
                 }));
-                current = Vec::with_capacity(30);
+
+                current = Vec::with_capacity(COUNT_PER_SUBSCRIBE);
             }
         }
 
@@ -39,13 +40,6 @@ impl OrderBookStream for MexcOrderBookStream {
             }));
         }
 
-        let subscribe_message = serde_json::to_string(&batches).unwrap();
-
-        BaseOrderBookStream {
-            url,
-            subscribe_message,
-            order_book_bus,
-            decoder: MexcBookTickerDecoder,
-        }
+        batches
     }
 }

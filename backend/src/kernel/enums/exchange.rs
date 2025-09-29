@@ -2,7 +2,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 use strum::IntoEnumIterator;
-use strum_macros::{AsRefStr, Display, EnumCount, EnumIter};
+use strum_macros::{AsRefStr, Display, EnumCount, EnumIter, EnumString};
 
 #[repr(u8)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, EnumIter, EnumCount, Serialize, Default)]
@@ -68,6 +68,7 @@ impl Exchange {
     Hash,
     EnumIter,
     EnumCount,
+    EnumString,
     AsRefStr,
     Serialize,
     Default,

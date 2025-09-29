@@ -1,7 +1,6 @@
-use crate::kernel::dto::order_book::OrderBookDto;
+use crate::kernel::enums::decoder::ActionDecoder;
 use anyhow::Result;
-use std::sync::Arc;
 
-pub trait OrderBookDecoder {
-    fn decode(&self, bytes: &[u8]) -> Result<Arc<OrderBookDto>>;
+pub trait OrderBookDecoder: Send + Sync + 'static {
+    fn decode(&self, bytes: &[u8]) -> Result<ActionDecoder>;
 }

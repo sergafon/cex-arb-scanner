@@ -1,33 +1,67 @@
-use crate::kernel::enums::exchange::Symbol;
-use crate::modules::bus::order_book::OrderBookBus;
-use crate::modules::decoder::okx::order_book::OkxOrderBookDecoder;
-use crate::modules::stream::base_order_book::BaseOrderBookStream;
-use crate::modules::stream::order_book::OrderBookStream;
-use std::sync::Arc;
-use strum::IntoEnumIterator;
+use crate::kernel::enums::exchange::{Exchange, Symbol};
+use crate::modules::stream::order_book::{COUNT_PER_SUBSCRIBE, OrderBookStream};
+use crate::modules::stream::supported_pair::SupportedPair;
+use async_trait::async_trait;
+use serde_json::{Value, json};
+use std::str::FromStr;
 
 pub struct OkxOrderBookStream;
 
+#[async_trait]
 impl OrderBookStream for OkxOrderBookStream {
-    type Decoder = OkxOrderBookDecoder;
+    const EXCHANGE: Exchange = Exchange::Okx;
 
-    fn new(order_book_bus: Arc<OrderBookBus>) -> BaseOrderBookStream<Self::Decoder> {
-        let url = "wss://ws.okx.com:8443/ws/v5/public".to_string();
-        let mut args = vec![];
+    fn get_ws_url() -> String {
+        "wss://ws.okx.com:8443/ws/v5/public".to_string()
+    }
 
-        for sym in Symbol::iter() {
-            args.push(serde_json::json!({
+    async fn get_batches() -> Vec<Value> {
+        let mut batches = Vec::new();
+        let mut current = Vec::with_capacity(COUNT_PER_SUBSCRIBE);
+
+        let symbols = Self::get_tickers("/data", "baseCcy").await;
+
+        for sym in symbols {
+            current.push(json!({
                 "channel": "bbo-tbt",
                 "instId": format!("{}-USDT", sym)
             }));
+
+            if current.len() == COUNT_PER_SUBSCRIBE {
+                batches.push(json!({
+                    "op": "subscribe",
+                    "args": current
+                }));
+
+                current = Vec::with_capacity(COUNT_PER_SUBSCRIBE);
+            }
         }
 
-        let subscribe_message = serde_json::json!({
-            "op": "subscribe",
-            "args": args
-        })
-        .to_string();
+        if !current.is_empty() {
+            batches.push(json!({
+                "op": "subscribe",
+                "args": current
+            }));
+        }
 
-        BaseOrderBookStream { url, subscribe_message, order_book_bus, decoder: OkxOrderBookDecoder }
+        batches
+    }
+}
+
+impl SupportedPair for OkxOrderBookStream {
+    const EXCHANGE: Exchange = Exchange::Okx;
+
+    fn get_rest_url() -> String {
+        "https://www.okx.com/api/v5/public/instruments?instType=SPOT".to_string()
+    }
+
+    fn filter(value: &Value) -> bool {
+        value.get("state").and_then(Value::as_str) == Some("live")
+            && value.get("ruleType").and_then(Value::as_str) == Some("normal")
+            && value.get("quoteCcy").and_then(Value::as_str) == Some("USDT")
+            && value
+                .get("baseCcy")
+                .and_then(Value::as_str)
+                .is_some_and(|base| Symbol::from_str(base).is_ok())
     }
 }

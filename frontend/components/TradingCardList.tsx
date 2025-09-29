@@ -60,19 +60,17 @@ export function TradingCardList() {
       </div>
 
       {isConnected ? (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {data.map((data, index) => (
-            <TradingCard key={index} data={data} />
-          ))}
-        </div>
-      ) : (
-        <div className="min-h-100 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <p className="text-muted-foreground">
-              Connecting to stream data...
-            </p>
+        data.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {data.map((data, index) => (
+              <TradingCard key={index} data={data} />
+            ))}
           </div>
-        </div>
+        ) : (
+          <EmptyContent text="No routes right now — try again later" />
+        )
+      ) : (
+        <EmptyContent text="Connecting to stream, waiting..." />
       )}
     </>
   )
@@ -103,6 +101,16 @@ const ConnectionStatus = ({ isConnected }: { isConnected: boolean }) => {
 
       <div className="text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
         Updates every 5s
+      </div>
+    </div>
+  )
+}
+
+const EmptyContent = ({ text }: { text: string }) => {
+  return (
+    <div className="min-h-100 flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <p>{text}</p>
       </div>
     </div>
   )

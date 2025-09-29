@@ -133,7 +133,7 @@ export function TradingCard({ data }: TradingCardProps) {
             </span>
           </div>
 
-          <div className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+          <div className="flex justify-between items-center p-3 min-h-[48px] rounded-lg bg-muted/50">
             <span className="text-sm font-medium text-muted-foreground">
               Gross
             </span>

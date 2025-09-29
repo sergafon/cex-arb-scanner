@@ -1,5 +1,5 @@
 use crate::kernel::dto::server::ServerState;
-use crate::modules::bus::signal::SignalBus;
+use crate::modules::broker::signal::SignalBroker;
 use crate::server::handlers::sse_signal::SseSignalHandler;
 use crate::server::router::build_router;
 use anyhow::Result;
@@ -12,9 +12,9 @@ pub struct ServerService {
 }
 
 impl ServerService {
-    pub fn new(tick_secs: u64, signal_bus: Arc<SignalBus>) -> Self {
+    pub fn new(tick_secs: u64, signal_broker: Arc<SignalBroker>) -> Self {
         let sse_signal_handler =
-            Arc::new(SseSignalHandler::new(tick_secs, Arc::clone(&signal_bus)));
+            Arc::new(SseSignalHandler::new(tick_secs, Arc::clone(&signal_broker)));
 
         Self { sse_signal_handler }
     }

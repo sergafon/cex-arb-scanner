@@ -4,18 +4,18 @@ use std::sync::Arc;
 use strum::{EnumCount, IntoEnumIterator};
 use tokio::sync::watch::{self, Receiver, Sender};
 
-pub struct SignalBus {
+pub struct SignalBroker {
     senders: [Sender<Arc<SignalDto>>; Symbol::COUNT],
     receivers: [Receiver<Arc<SignalDto>>; Symbol::COUNT],
 }
 
-impl Default for SignalBus {
+impl Default for SignalBroker {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl SignalBus {
+impl SignalBroker {
     pub fn new() -> Self {
         let mut senders = Vec::<Sender<Arc<SignalDto>>>::with_capacity(Symbol::COUNT);
         let mut receivers = Vec::<Receiver<Arc<SignalDto>>>::with_capacity(Symbol::COUNT);

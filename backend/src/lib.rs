@@ -3,8 +3,8 @@ mod modules;
 pub mod server;
 mod services;
 
-use crate::modules::bus::order_book::OrderBookBus;
-use crate::modules::bus::signal::SignalBus;
+use crate::modules::broker::order_book::OrderBookBroker;
+use crate::modules::broker::signal::SignalBroker;
 use crate::modules::stream::manager::OrderBookStreamManager;
 use crate::services::server::ServerService;
 use crate::services::signal::SignalService;
@@ -22,15 +22,20 @@ impl App {
         tracing_subscriber::fmt()
             .with_env_filter(EnvFilter::from_default_env())
             .with_target(false)
+            .with_file(true)
+            .with_line_number(true)
             .init();
 
-        let order_book_bus = Arc::new(OrderBookBus::default());
-        let signal_bus = Arc::new(SignalBus::default());
-        let stream = Arc::new(OrderBookStreamManager::new(Arc::clone(&order_book_bus)));
+        let order_book_broker = Arc::new(OrderBookBroker::default());
+        let signal_broker = Arc::new(SignalBroker::default());
+        let stream = Arc::new(OrderBookStreamManager::new(Arc::clone(&order_book_broker)));
         let order_book_service = StreamService::new(stream);
-        let signal_service =
-            SignalService::new(STREAM_INTERVAL, order_book_bus, Arc::clone(&signal_bus));
-        let server_service = ServerService::new(STREAM_INTERVAL, signal_bus);
+        let signal_service = SignalService::new(
+            STREAM_INTERVAL,
+            order_book_broker,
+            Arc::clone(&signal_broker),
+        );
+        let server_service = ServerService::new(STREAM_INTERVAL, signal_broker);
 
         if let Err(error) = tokio::try_join!(
             order_book_service.run(),

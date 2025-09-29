@@ -55,9 +55,11 @@ cp .env.prod.example .env.prod
 
 ### Start in development
 
+http://localhost:30003
+
 ```bash
 make dev build
-make dev up -d
+make dev up -- -d
 
 # ...
 
@@ -66,9 +68,11 @@ make dev down
 
 ### Start in production
 
+http://localhost:30002
+
 ```bash
 make prod build
-make prod up -d
+make prod up -- -d
 
 # ...
 

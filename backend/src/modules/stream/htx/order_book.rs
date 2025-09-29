@@ -1,32 +1,67 @@
-use crate::kernel::enums::exchange::Symbol;
-use crate::modules::bus::order_book::OrderBookBus;
-use crate::modules::decoder::htx::order_book::HtxOrderBookDecoder;
-use crate::modules::stream::base_order_book::BaseOrderBookStream;
-use crate::modules::stream::order_book::OrderBookStream;
-use std::sync::Arc;
-use strum::IntoEnumIterator;
+use crate::kernel::enums::exchange::{Exchange, Symbol};
+use crate::modules::stream::order_book::{COUNT_PER_SUBSCRIBE, OrderBookStream};
+use crate::modules::stream::supported_pair::SupportedPair;
+use async_trait::async_trait;
+use serde_json::{Value, json};
+use std::str::FromStr;
 
 pub struct HtxOrderBookStream;
 
+#[async_trait]
 impl OrderBookStream for HtxOrderBookStream {
-    type Decoder = HtxOrderBookDecoder;
+    const EXCHANGE: Exchange = Exchange::Htx;
 
-    fn new(order_book_bus: Arc<OrderBookBus>) -> BaseOrderBookStream<Self::Decoder> {
-        let url = "wss://api.huobi.pro/ws".to_string();
+    fn get_ws_url() -> String {
+        "wss://api.huobi.pro/ws".to_string()
+    }
 
-        let mut subs = vec![];
+    async fn get_batches() -> Vec<Value> {
+        let mut batches = Vec::new();
+        let mut current = Vec::with_capacity(COUNT_PER_SUBSCRIBE);
 
-        for sym in Symbol::iter() {
-            let s = sym.to_string().to_lowercase();
+        let symbols = Self::get_tickers("/data", "bcdn").await;
 
-            subs.push(serde_json::json!({
-                "sub": format!("market.{s}usdt.bbo"),
-                "id": format!("{s}-bbo")
+        for sym in symbols {
+            let sym = sym.to_lowercase();
+
+            current.push(json!({
+                "sub": format!("market.{sym}usdt.bbo"),
+                "id": format!("{sym}-bbo")
+            }));
+
+            if current.len() == COUNT_PER_SUBSCRIBE {
+                batches.push(json!({
+                    "batches": current
+                }));
+
+                current = Vec::with_capacity(COUNT_PER_SUBSCRIBE);
+            }
+        }
+
+        if !current.is_empty() {
+            batches.push(json!({
+                "batches": current
             }));
         }
 
-        let subscribe_message = serde_json::to_string(&subs).expect("serialize subs");
+        batches
+    }
+}
 
-        BaseOrderBookStream { url, subscribe_message, order_book_bus, decoder: HtxOrderBookDecoder }
+impl SupportedPair for HtxOrderBookStream {
+    const EXCHANGE: Exchange = Exchange::Htx;
+
+    fn get_rest_url() -> String {
+        "https://api.huobi.pro/v2/settings/common/symbols".to_string()
+    }
+
+    fn filter(value: &Value) -> bool {
+        value.get("state").and_then(Value::as_str) == Some("online")
+            && value.get("te").and_then(Value::as_bool) == Some(true)
+            && value.get("qcdn").and_then(Value::as_str) == Some("USDT")
+            && value
+                .get("bcdn")
+                .and_then(Value::as_str)
+                .is_some_and(|base| Symbol::from_str(base).is_ok())
     }
 }

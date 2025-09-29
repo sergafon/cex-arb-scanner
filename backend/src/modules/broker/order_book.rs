@@ -1,6 +1,6 @@
 use crate::kernel::dto::order_book::OrderBookDto;
 use crate::kernel::enums::exchange::{Exchange, Symbol};
-use anyhow::{anyhow, bail, Result};
+use anyhow::{Result, anyhow, bail};
 use std::collections::HashMap;
 use std::sync::Arc;
 use strum::IntoEnumIterator;
@@ -13,18 +13,18 @@ struct Key {
 }
 
 #[derive(Debug)]
-pub struct OrderBookBus {
+pub struct OrderBookBroker {
     senders: HashMap<Key, Sender<Arc<OrderBookDto>>>,
     receivers: HashMap<Symbol, Vec<Receiver<Arc<OrderBookDto>>>>,
 }
 
-impl Default for OrderBookBus {
+impl Default for OrderBookBroker {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl OrderBookBus {
+impl OrderBookBroker {
     pub fn new() -> Self {
         let mut senders = HashMap::new();
         let mut receivers: HashMap<_, Vec<_>> = HashMap::new();
