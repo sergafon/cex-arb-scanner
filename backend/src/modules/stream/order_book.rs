@@ -80,7 +80,7 @@ pub trait OrderBookStream {
                 Err(error) => {
                     tracing::error!(error=%error, batch=%batch, exchange=?Self::EXCHANGE, "Subscribe failed, reconnection...");
                     sleep(SLEEP_DURATION).await;
-                    break;
+                    continue;
                 }
             };
 
